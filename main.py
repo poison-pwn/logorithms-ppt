@@ -270,3 +270,11 @@ class DerivativeIntro(Scene):
             *[ReplacementTransform(equat_five[i], equat_six[j]) for i, j in changes]
         )
         self.play(*[Uncreate(i) for i in self.mobjects])
+
+
+class ThankYou(Scene):
+    def construct(self):
+        thankyou = Tex("Thank You!")
+        thankyou.scale(3.5)
+        self.play(Write(thankyou))
+        self.play(FadeOut(thankyou, shift=UP))
