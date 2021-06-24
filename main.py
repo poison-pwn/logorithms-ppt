@@ -197,3 +197,76 @@ class LogGraph(Scene):
             *[FadeOut(i, shift=UP) for i in fadable],
             run_time=1.5,
         )
+
+
+class DerivativeIntro(Scene):
+    def construct(self):
+        title = Tex("derivative of $ln(x)$")
+        title.scale(3.2)
+        self.play(Write(title))
+        self.play(FadeOut(title, shift=UP))
+
+        equat_basic = MathTex("y", "=", "ln(", "x", ")").scale(4)
+        equat_second = MathTex("e", "^y", "=", "x").scale(4)
+        changes = [(0, 1), (1, 2), (3, 3)]
+
+        self.play(Write(equat_basic))
+        self.play(
+            *[
+                ReplacementTransform(equat_basic[i], equat_second[j])
+                for i, j in changes
+            ],
+            FadeIn(equat_second[0], shift=UP),
+            *[FadeOut(equat_basic[i]) for i in [2, -1]],
+        )
+
+        equat_second_copy = MathTex("e^y", "=", "x").scale(4)
+        equat_third = MathTex("d ", "e^y", "=", "d", "x").scale(4)
+        self.remove(*self.mobjects)
+        self.add(equat_second_copy)
+        changes = [(0, 1), (1, 2), (2, -1)]
+        self.play(
+            *[
+                ReplacementTransform(equat_second_copy[i], equat_third[j])
+                for i, j in changes
+            ],
+            *[FadeIn(equat_third[i], shift=UP) for i in [0, -2]],
+        )
+        equat_fourth = MathTex("e^y", " dy", "=", "d", "x").scale(4)
+        changes = [
+            (-1, -1),
+            (-2, -2),
+            (-3, -3),
+        ]
+        self.play(
+            FadeOut(equat_third[0], shift=UP),
+            FadeIn(equat_fourth[1], shift=UP),
+            CounterclockwiseTransform(equat_third[1], equat_fourth[0]),
+            *[
+                ReplacementTransform(equat_third[i], equat_fourth[j])
+                for i, j in changes
+            ],
+        )
+        self.remove(*self.mobjects)
+        equat_third_copy = MathTex("e^y", " d", "y", "=", "dx").scale(4)
+        self.add(equat_third_copy)
+        equat_five = MathTex("{d", "y", r"\over", "dx}", "=", "{1\over", "e^y}").scale(
+            4
+        )
+        changes = [(0, -1), (1, 0), (2, 1), (3, 4), (4, 3)]
+        self.play(
+            *[
+                ReplacementTransform(equat_third_copy[i], equat_five[j])
+                for i, j in changes
+            ],
+            FadeIn(equat_five[5], shift=DOWN),
+            FadeIn(equat_five[2], shift=RIGHT),
+        )
+        equat_six = MathTex("{d", r"\over", "dx}", "ln(x)", "=", "{1\over", "x}").scale(
+            4
+        )
+        changes = [(0, 0), (1, 3), (2, 1), (3, 2), (4, 4), (5, 5), (6, 6)]
+        self.play(
+            *[ReplacementTransform(equat_five[i], equat_six[j]) for i, j in changes]
+        )
+        self.play(*[Uncreate(i) for i in self.mobjects])
