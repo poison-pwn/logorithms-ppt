@@ -1,5 +1,7 @@
 from manim import *
-from math import log1p
+from math import log, e
+
+from manim.utils.rate_functions import ease_in_out_quad
 
 
 class Intro(Scene):
@@ -28,10 +30,10 @@ class Intro(Scene):
 
 class ShowExpression(Scene):
     def construct(self):
-        equat_basic = MathTex("{{2}}{{^3}}={{8}}")
+        equat_basic = MathTex("2", "^3", "=", "8")
         equat_basic.scale(4)
         self.play(Write(equat_basic))
-        equat_transformed = MathTex("{{log}}{{^{}_2}}{{(}}{{8}}{{)}}={{3}}").scale(4)
+        equat_transformed = MathTex("log", "^{}_2", "(", "8", ")", "=", "3").scale(4)
         changes = [(0, 1), (2, 5), (3, 3)]
         self.play(
             FadeIn(equat_transformed[0], shift=RIGHT),
@@ -52,9 +54,9 @@ class ShowExpression(Scene):
 
         self.remove(*self.mobjects)
 
-        equat_resplit = MathTex("{{log^{}_2(8)}}={{3}}").scale(4)
+        equat_resplit = MathTex("log^{}_2(8)", "=", "3").scale(4)
         equat_resplit.save_state()
-        equat_final = MathTex("2^{", r"log^{}_2(8)}", "=", "8").scale(4)
+        equat_final = MathTex("2^{", "log^{}_2(8)}", "=", "8").scale(4)
         self.add(equat_resplit)
         changes = [(0, 1), (1, 2), (-1, -1)]
 
@@ -66,8 +68,8 @@ class ShowExpression(Scene):
 
         self.remove(equat_resplit)
 
-        equat_resplit_for_e = MathTex("{{log}}{{^{}_2}}{{(8)}}{{=3}}").scale(4)
-        equat_with_e = MathTex("{{log}}{{^{}_e}}{{(8)}}{{=2.794}}").scale(4)
+        equat_resplit_for_e = MathTex("log", "^{}_2", "(8)", "=3").scale(4)
+        equat_with_e = MathTex("log", "^{}_e", "(8)", "=2.794").scale(4)
         self.play(
             *[
                 ReplacementTransform(equat_resplit_for_e[i], equat_with_e[i])
@@ -77,9 +79,9 @@ class ShowExpression(Scene):
 
         self.remove(*self.mobjects)
 
-        equat_with_e_copy = MathTex("{{l}}{{og^{}_e}}{{(8)=2.794}}").scale(4)
+        equat_with_e_copy = MathTex("l", "og^{}_e", "(8)=2.794").scale(4)
         self.add(equat_with_e_copy)
-        equat_with_ln = MathTex("{{l}}{{n}}{{(8)}}{{=2.794}}").scale(4)
+        equat_with_ln = MathTex("l", "n", "(8)", "=2.794").scale(4)
         equat_with_e_copy[-1].generate_target()
         equat_with_e_copy[-1].target.next_to(equat_with_ln[1], RIGHT, buff=SMALL_BUFF)
 
@@ -94,20 +96,104 @@ class ShowExpression(Scene):
 
 class LogGraph(Scene):
     def construct(self):
-        axes = Axes(x_range=[0, 10], y_range=[0, 4], axis_config={"include_tip": False})
-        t = ValueTracker(0.1)
-        func = log1p
-        graph = axes.get_graph(log1p, color=MAROON)
-        initial_point = [axes.coords_to_point(t.get_value(), func(t.get_value()))]
-        dot = Dot(point=initial_point)
+        TANGENT_STROKE = 2.2
+        TANGENT_LEN = 5
+
+        title = Tex("Graph of $ln(x)$")
+        title.scale(3.7)
+        self.play(Write(title))
+        self.play(FadeOut(title, shift=UP))
+
+        axes = Axes(
+            x_range=[0, 10],
+            y_range=[-1, 3],
+            tips=False,
+            x_axis_config={"numbers_to_include": np.arange(1, 11)},
+            y_axis_config={"numbers_to_include": np.arange(-1, 4)},
+        )
+        coord_labels = axes.get_coordinate_labels()
+        x_labels, y_labels = coord_labels[0], coord_labels[1]
+        t = ValueTracker(0.4)
+        ln_func = lambda x: log(x, e)
+        ln_graph = axes.get_graph(ln_func, color=MAROON, x_range=[0.3, 10])
+
+        dot = Dot(point=ln_graph.point_from_proportion(t.get_value()))
+        tangent_line = TangentLine(
+            ln_graph, t.get_value(), TANGENT_LEN, stroke_width=TANGENT_STROKE
+        )
+        tangent_line.move_to(dot.get_center())
+        ln_func_label = Tex("ln(x)")
+        ln_func_label.next_to(ln_graph.point_from_proportion(0.9), UP + LEFT * 2)
         self.play(
             AnimationGroup(
                 AnimationGroup(
                     *[Write(axes.axes[i]) for i in range(2)],
                     lag_ratio=0,
                 ),
-                Create(graph),
-                FadeIn(dot, scale=5),
+                AnimationGroup(
+                    AnimationGroup(
+                        *[Write(i) for i in x_labels], lag_ratio=0.1, run_time=0.07
+                    ),
+                    AnimationGroup(
+                        *[Write(i) for i in y_labels], lag_ratio=0.1, run_time=0.07
+                    ),
+                    lag_ratio=0,
+                ),
+                Create(ln_graph),
+                FadeIn(ln_func_label, shift=DOWN),
                 lag_ratio=1,
             )
+        )
+        self.play(FadeIn(dot, scale=7))
+        self.play(FadeIn(tangent_line, shift=tangent_line.get_unit_vector()))
+
+        def line_updater(m: TangentLine):
+            m.become(
+                TangentLine(
+                    ln_graph, t.get_value(), TANGENT_LEN, stroke_width=TANGENT_STROKE
+                )
+            )
+            m.move_to(dot.get_center())
+            return m
+
+        dot.add_updater(
+            lambda x: x.move_to(ln_graph.point_from_proportion(t.get_value()))
+        )
+        tangent_line.add_updater(line_updater)
+        self.play(t.animate.set_value(0.07), rate_func=ease_in_out_quad)
+        self.play(t.animate.set_value(1), rate_func=ease_in_out_quad)
+        inverse_func = lambda x: 1 / x
+        inverse_graph = axes.get_graph(inverse_func, color=GREEN, x_range=[0.3, 10])
+        inverse_graph_label = MathTex(r"\frac{1}{x}")
+        inverse_graph_label.next_to(
+            inverse_graph.point_from_proportion(0.2), RIGHT * 2 + UP
+        )
+        self.play(
+            AnimationGroup(
+                AnimationGroup(
+                    Create(inverse_graph),
+                    FadeOut(dot),
+                    Uncreate(tangent_line),
+                    lag_ratio=0,
+                ),
+                FadeIn(inverse_graph_label, shift=DOWN),
+                lag_ratio=1,
+            )
+        )
+
+        def split_uncreatable_mobjects(arr):
+            vmob = []
+            mob = []
+            for i in arr:
+                if issubclass(i.__class__, VMobject):
+                    vmob.append(i)
+                else:
+                    mob.append(i)
+            return vmob, mob
+
+        uncreatable, fadable = split_uncreatable_mobjects(self.mobjects)
+        self.play(
+            *[Uncreate(i) for i in uncreatable],
+            *[FadeOut(i, shift=UP) for i in fadable],
+            run_time=1.5,
         )
