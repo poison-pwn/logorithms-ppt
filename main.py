@@ -64,12 +64,14 @@ class ShowExpression(Scene):
             FadeIn(equat_final[0], shift=UP),
             *[Transform(equat_resplit[i], equat_final[j]) for i, j in changes],
         )
+
         self.play(Restore(equat_resplit), FadeOut(equat_final[0]))
 
         self.remove(equat_resplit)
 
         equat_resplit_for_e = MathTex("log", "^{}_2", "(8)", "=3").scale(4)
         equat_with_e = MathTex("log", "^{}_e", "(8)", "=2.794").scale(4)
+
         self.play(
             *[
                 ReplacementTransform(equat_resplit_for_e[i], equat_with_e[i])
@@ -139,11 +141,11 @@ class LogGraph(Scene):
                     ),
                     lag_ratio=0,
                 ),
-                Create(ln_graph),
-                FadeIn(ln_func_label, shift=DOWN),
                 lag_ratio=1,
             )
         )
+        self.play(Create(ln_graph))
+        self.play(FadeIn(ln_func_label, shift=DOWN))
         self.play(FadeIn(dot, scale=7))
         self.play(FadeIn(tangent_line, shift=tangent_line.get_unit_vector()))
 
