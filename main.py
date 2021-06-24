@@ -1,4 +1,5 @@
 from manim import *
+from math import log1p
 
 
 class Intro(Scene):
@@ -44,25 +45,27 @@ class ShowExpression(Scene):
         self.remove(*self.mobjects)
         equat_copy = equat_transformed.copy()
         self.add(equat_copy)
+
         self.play(Indicate(equat_copy[1]))
         self.play(Indicate(equat_copy[3]))
         self.play(Indicate(equat_copy[6]))
+
         self.remove(*self.mobjects)
+
         equat_resplit = MathTex("{{log^{}_2(8)}}={{3}}").scale(4)
         equat_resplit.save_state()
         equat_final = MathTex("2^{", r"log^{}_2(8)}", "=", "8").scale(4)
         self.add(equat_resplit)
-        changes = [
-            (0, 1),
-            (1, 2),
-            (-1, -1),
-        ]
+        changes = [(0, 1), (1, 2), (-1, -1)]
+
         self.play(
             FadeIn(equat_final[0], shift=UP),
             *[Transform(equat_resplit[i], equat_final[j]) for i, j in changes],
         )
         self.play(Restore(equat_resplit), FadeOut(equat_final[0]))
+
         self.remove(equat_resplit)
+
         equat_resplit_for_e = MathTex("{{log}}{{^{}_2}}{{(8)}}{{=3}}").scale(4)
         equat_with_e = MathTex("{{log}}{{^{}_e}}{{(8)}}{{=2.794}}").scale(4)
         self.play(
@@ -71,7 +74,9 @@ class ShowExpression(Scene):
                 for i in range(len(equat_with_e))
             ]
         )
+
         self.remove(*self.mobjects)
+
         equat_with_e_copy = MathTex("{{l}}{{og^{}_e}}{{(8)=2.794}}").scale(4)
         self.add(equat_with_e_copy)
         equat_with_ln = MathTex("{{l}}{{n}}{{(8)}}{{=2.794}}").scale(4)
@@ -85,3 +90,24 @@ class ShowExpression(Scene):
             MoveToTarget(equat_with_e_copy[-1]),
         )
         self.play(*[FadeOut(i, shift=UP) for i in self.mobjects])
+
+
+class LogGraph(Scene):
+    def construct(self):
+        axes = Axes(x_range=[0, 10], y_range=[0, 4], axis_config={"include_tip": False})
+        t = ValueTracker(0.1)
+        func = log1p
+        graph = axes.get_graph(log1p, color=MAROON)
+        initial_point = [axes.coords_to_point(t.get_value(), func(t.get_value()))]
+        dot = Dot(point=initial_point)
+        self.play(
+            AnimationGroup(
+                AnimationGroup(
+                    *[Write(axes.axes[i]) for i in range(2)],
+                    lag_ratio=0,
+                ),
+                Create(graph),
+                FadeIn(dot, scale=5),
+                lag_ratio=1,
+            )
+        )
