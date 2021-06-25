@@ -1,0 +1,3 @@
+[submodule "pptx_export"]
+	path = pptx_export
+	url = git@github.com:poison-pwn/pptx_export.git
